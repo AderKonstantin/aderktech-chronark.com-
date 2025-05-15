@@ -4,7 +4,7 @@ import { Mdx } from "@/app/components/mdx";
 import { Header } from "./header";
 import "./mdx.css";
 import { ReportView } from "./view";
-import { Redis } from "@upstash/redis";
+import Redis from "ioredis";
 
 export const revalidate = 60;
 
@@ -14,7 +14,12 @@ type Props = {
   };
 };
 
-const redis = Redis.fromEnv();
+// Настройка подключения к локальному Redis
+const redis = new Redis({
+  host: process.env.REDIS_HOST || "localhost",
+  port: parseInt(process.env.REDIS_PORT || "6379"),
+  password: process.env.REDIS_PASSWORD,
+});
 
 export async function generateStaticParams(): Promise<Props["params"][]> {
   return allProjects
@@ -32,8 +37,11 @@ export default async function PostPage({ params }: Props) {
     notFound();
   }
 
-  const views =
-    (await redis.get<number>(["pageviews", "projects", slug].join(":"))) ?? 0;
+  // Получаем и преобразуем значение просмотров
+  const views = parseInt(
+    (await redis.get(`projects:${slug}:views`)) || "0",
+    10
+  );
 
   return (
     <div className="bg-zinc-50 min-h-screen">

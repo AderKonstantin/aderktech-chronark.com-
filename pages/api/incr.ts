@@ -1,9 +1,15 @@
-import { Redis } from "@upstash/redis";
+import Redis from "ioredis";
 import { NextRequest, NextResponse } from "next/server";
 
-const redis = Redis.fromEnv();
+// Настройка подключения к локальному Redis
+const redis = new Redis({
+  host: process.env.REDIS_HOST || "localhost",
+  port: parseInt(process.env.REDIS_PORT || "6379"),
+  password: process.env.REDIS_PASSWORD,
+});
+
 export const config = {
-  runtime: "edge",
+  runtime: "edge", // Возможно потребуется изменить на "nodejs" если возникнут проблемы
 };
 
 export default async function incr(req: NextRequest): Promise<NextResponse> {
@@ -15,33 +21,33 @@ export default async function incr(req: NextRequest): Promise<NextResponse> {
   }
 
   const body = await req.json();
-  let slug: string | undefined = undefined;
-  if ("slug" in body) {
-    slug = body.slug;
-  }
+  const slug = body.slug;
+  
   if (!slug) {
     return new NextResponse("Slug not found", { status: 400 });
   }
+
   const ip = req.ip;
   if (ip) {
-    // Hash the IP in order to not store it directly in your db.
+    // Хеширование IP-адреса
     const buf = await crypto.subtle.digest(
       "SHA-256",
-      new TextEncoder().encode(ip),
+      new TextEncoder().encode(ip)
     );
     const hash = Array.from(new Uint8Array(buf))
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
 
-    // deduplicate the ip for each slug
-    const isNew = await redis.set(["deduplicate", hash, slug].join(":"), true, {
-      nx: true,
-      ex: 24 * 60 * 60,
-    });
+    // Проверка уникальности посещения
+    const key = `deduplicate:${hash}:${slug}`;
+    const isNew = await redis.set(key, "1", "EX", 86400, "NX");
+    
     if (!isNew) {
-      new NextResponse(null, { status: 202 });
+      return new NextResponse(null, { status: 202 });
     }
   }
-  await redis.incr(["pageviews", "projects", slug].join(":"));
+
+  // Увеличиваем счетчик просмотров
+  await redis.incr(`projects:${slug}:views`);
   return new NextResponse(null, { status: 202 });
 }

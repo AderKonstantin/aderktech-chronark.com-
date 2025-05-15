@@ -4,19 +4,24 @@ import { allProjects } from "contentlayer/generated";
 import { Navigation } from "../components/nav";
 import { Card } from "../components/card";
 import { Article } from "./article";
-import { Redis } from "@upstash/redis";
+import Redis from "ioredis"; // Заменяем @upstash/redis на ioredis
 import { Eye } from "lucide-react";
 
-const redis = Redis.fromEnv();
+// Создаем подключение к локальному Redis
+const redis = new Redis({
+  host: process.env.REDIS_HOST || "localhost",
+  port: parseInt(process.env.REDIS_PORT || "6379"),
+  password: process.env.REDIS_PASSWORD, // если есть пароль
+});
 
 export const revalidate = 60;
 export default async function ProjectsPage() {
-  const views = (
-    await redis.mget<number[]>(
-      ...allProjects.map((p) => ["pageviews", "projects", p.slug].join(":")),
-    )
-  ).reduce((acc, v, i) => {
-    acc[allProjects[i].slug] = v ?? 0;
+  const viewsEntries = await redis.mget(
+    ...allProjects.map((p) => `projects:${p.slug}:views`)
+  );
+
+  const views = allProjects.reduce((acc, project, index) => {
+    acc[project.slug] = parseInt(viewsEntries[index] as string) || 0;
     return acc;
   }, {} as Record<string, number>);
 
