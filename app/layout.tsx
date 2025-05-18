@@ -16,13 +16,6 @@ export const metadata: Metadata = {
       "Junior Dev & Student",
     url: "https://aderk.tech",
     siteName: "aderk.tech",
-    images: [
-      {
-        url: "https://aderk.tech/og.png",
-        width: 1920,
-        height: 1080,
-      },
-    ],
     locale: "ru-RU",
     type: "website",
   },

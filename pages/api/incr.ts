@@ -9,7 +9,7 @@ const redis = new Redis({
 });
 
 export const config = {
-  runtime: "edge", // Возможно потребуется изменить на "nodejs" если возникнут проблемы
+  runtime: "nodejs", // Возможно потребуется изменить на "nodejs" если возникнут проблемы
 };
 
 export default async function incr(req: NextRequest): Promise<NextResponse> {

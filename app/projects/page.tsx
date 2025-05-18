@@ -1,33 +1,44 @@
+'use client'; // Превращаем компонент в клиентский
+
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { allProjects } from "contentlayer/generated";
 import { Navigation } from "../components/nav";
 import { Card } from "../components/card";
 import { Article } from "./article";
-import Redis from "ioredis"; // Заменяем @upstash/redis на ioredis
 import { Eye } from "lucide-react";
 
-// Создаем подключение к локальному Redis
-const redis = new Redis({
-  host: process.env.REDIS_HOST || "localhost",
-  port: parseInt(process.env.REDIS_PORT || "6379"),
-  password: process.env.REDIS_PASSWORD, // если есть пароль
-});
-
 export const revalidate = 60;
-export default async function ProjectsPage() {
-  const viewsEntries = await redis.mget(
-    ...allProjects.map((p) => `projects:${p.slug}:views`)
-  );
 
-  const views = allProjects.reduce((acc, project, index) => {
-    acc[project.slug] = parseInt(viewsEntries[index] as string) || 0;
-    return acc;
-  }, {} as Record<string, number>);
+type ViewsData = Record<string, number>;
+
+export default function ProjectsPage() {
+  const [views, setViews] = useState<ViewsData>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Загружаем данные через клиентский запрос
+  useEffect(() => {
+    const fetchViews = async () => {
+      try {
+        const response = await fetch('/api/views');
+        if (!response.ok) throw new Error('Failed to fetch views');
+        const data = await response.json();
+        setViews(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchViews();
+  }, []);
 
   const featured = allProjects.find((project) => project.slug === "cbg")!;
   const top2 = allProjects.find((project) => project.slug === "blog")!;
   const top3 = allProjects.find((project) => project.slug === "bimkaspace")!;
+  
   const sorted = allProjects
     .filter((p) => p.published)
     .filter(

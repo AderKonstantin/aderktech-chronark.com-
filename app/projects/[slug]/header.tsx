@@ -10,7 +10,6 @@ type Props = {
 		description: string;
 		repository?: string;
 	};
-
 	views: number;
 };
 export const Header: React.FC<Props> = ({ project, views }) => {
