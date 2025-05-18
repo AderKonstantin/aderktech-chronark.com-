@@ -1,0 +1,45 @@
+services:
+  next:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: example-frontend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.next.rule=Host(`beta.example`)"
+      - "traefik.http.routers.next.entrypoints=https" # Thats correct
+      - "traefik.http.routers.next.tls=true" # I dont need certresolver here
+      - "traefik.http.services.next.loadbalancer.server.port=3000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    depends_on:
+      - redis
+    networks:
+        - proxy
+        - backend
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis_data:/data
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    networks:
+      - backend
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  redis_data:
+
+networks:
+  proxy:
+    external: true
+  backend:
+    internal: true

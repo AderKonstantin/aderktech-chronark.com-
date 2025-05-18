@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    shortcut: "/favicon.png",
+    shortcut: "/favicon.jpg",
   },
 };
 const inter = Inter({

@@ -31,3 +31,17 @@ pnpm dev
 ## Cloning / Forking
 
 Please remove all of my personal information (projects, images, etc.) before deploying your own version of this site.
+
+
+## Docker 
+
+First of all setup networks:
+```bash
+docker network create proxy
+docker network create backend
+```
+
+And then start the stack:
+```bash
+docker-compose --env-file .env up -d --build
+```
