@@ -1,26 +1,25 @@
 import { NextResponse } from "next/server";
 import { getRedisClient } from "../../../lib/redis";
 
-export const dynamic = 'force-dynamic'; // Отключаем кеширование
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 
 export async function GET() {
-    try {
-        const redis = getRedisClient();
-        const projects = await redis.keys("projects:*:views");
-        const viewsEntries = await redis.mget(...projects);
+  try {
+    const redis = getRedisClient();
+    const keys = await redis.keys('projects:*:views');
+    if (keys.length === 0) return NextResponse.json({});
+    
+    const values = await redis.mget(...keys);
+    const views = keys.reduce((acc, key, i) => {
+      const slug = key.split(':')[1];
+      acc[slug] = parseInt(values[i] as string) || 0;
+      return acc;
+    }, {} as Record<string, number>);
 
-        const viewsData = projects.reduce((acc, key, index) => {
-            const slug = key.split(":")[1];
-            acc[slug] = parseInt(viewsEntries[index] as string) || 0;
-            return acc;
-        }, {} as Record<string, number>);
-
-        return NextResponse.json(viewsData);
-    } catch (error) {
-        console.error("Redis error:", error);
-        return NextResponse.json(
-            { error: "Failed to fetch views" },
-            { status: 500 }
-        );
-    }
+    return NextResponse.json(views);
+  } catch (error) {
+    console.error('Redis error:', error);
+    return NextResponse.json({}, { status: 500 });
+  }
 }

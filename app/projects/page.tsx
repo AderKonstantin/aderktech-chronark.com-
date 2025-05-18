@@ -1,4 +1,4 @@
-'use client'; // Превращаем компонент в клиентский
+'use client';
 
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
@@ -8,8 +8,6 @@ import { Card } from "../components/card";
 import { Article } from "./article";
 import { Eye } from "lucide-react";
 
-export const revalidate = 60;
-
 type ViewsData = Record<string, number>;
 
 export default function ProjectsPage() {
@@ -17,12 +15,11 @@ export default function ProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Загружаем данные через клиентский запрос
   useEffect(() => {
     const fetchViews = async () => {
       try {
         const response = await fetch('/api/views');
-        if (!response.ok) throw new Error('Failed to fetch views');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         setViews(data);
       } catch (err) {
@@ -38,7 +35,7 @@ export default function ProjectsPage() {
   const featured = allProjects.find((project) => project.slug === "cbg")!;
   const top2 = allProjects.find((project) => project.slug === "blog")!;
   const top3 = allProjects.find((project) => project.slug === "bimkaspace")!;
-  
+
   const sorted = allProjects
     .filter((p) => p.published)
     .filter(
