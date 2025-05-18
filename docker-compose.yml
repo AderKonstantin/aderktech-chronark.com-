@@ -6,12 +6,12 @@ services:
       - redis_data:/data
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    command: [ "redis-server", "--requirepass", "${REDIS_PASSWORD}" ]
     networks:
       - backend
-    
+
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 3s
       retries: 3
@@ -27,17 +27,18 @@ services:
       - "traefik.http.routers.next.tls=true"
       - "traefik.http.services.next.loadbalancer.server.port=3000"
     environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     depends_on:
       - redis
     networks:
-        - proxy
-        - backend
+      - proxy
+      - backend
 
 volumes:
   redis_data:
+
 
 networks:
   proxy:
