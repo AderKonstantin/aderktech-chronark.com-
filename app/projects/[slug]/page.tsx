@@ -4,7 +4,6 @@ import { Mdx } from "@/app/components/mdx";
 import { Header } from "./header";
 import "./mdx.css";
 import { ReportView } from "./view";
-import Redis from "ioredis";
 
 export const revalidate = 60;
 
@@ -13,13 +12,6 @@ type Props = {
     slug: string;
   };
 };
-
-// Настройка подключения к локальному Redis
-const redis = new Redis({
-  host: process.env.REDIS_HOST || "localhost",
-  port: parseInt(process.env.REDIS_PORT || "6379"),
-  password: process.env.REDIS_PASSWORD,
-});
 
 export async function generateStaticParams(): Promise<Props["params"][]> {
   return allProjects
@@ -37,15 +29,9 @@ export default async function PostPage({ params }: Props) {
     notFound();
   }
 
-  // Получаем и преобразуем значение просмотров
-  const views = parseInt(
-    (await redis.get(`projects:${slug}:views`)) || "0",
-    10
-  );
-
   return (
     <div className="bg-zinc-50 min-h-screen">
-      <Header project={project} views={views} />
+      <Header project={project} />
       <ReportView slug={project.slug} />
 
       <article className="px-4 py-12 mx-auto prose prose-zinc prose-quoteless">
