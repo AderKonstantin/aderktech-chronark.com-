@@ -43,5 +43,5 @@ docker network create backend
 
 And then start the stack:
 ```bash
-docker-compose --env-file .env up -d --build
+docker compose up -d --build
 ```

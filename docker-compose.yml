@@ -4,9 +4,15 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: main-aderk-next
-    # labels:
-    #   - "traefik.enable=true"
-    #   - "traefik.http.routers.next.rule=Host(`aderk.tech`)"
-    #   - "traefik.http.routers.next.entrypoints=https"
-    #   - "traefik.http.routers.next.tls=true"
-    #   - "traefik.http.services.next.loadbalancer.server.port=3000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.next.rule=Host(`aderk.tech`)"
+      - "traefik.http.routers.next.entrypoints=https"
+      - "traefik.http.routers.next.tls=true"
+      - "traefik.http.services.next.loadbalancer.server.port=3000"
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
